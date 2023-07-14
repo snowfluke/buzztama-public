@@ -4,11 +4,11 @@ const cron = require("node-cron");
 // Constant
 const USER_AGENT = "";
 const OPTIONS: PuppeteerLaunchOptions = {
-  headless: true,
+  headless: false,
   userDataDir: "./user_data",
   args: ["--no-sandbox", "--disable-setuid-sandbox"],
 };
-const URL_PAGE = "https://m.facebook.com/stmik.komputamamajenang.9";
+const URL_PAGE = "https://facebook.com/stmik.komputamamajenang.9";
 const CREDS = {
   EM: "",
   PW: "",
@@ -22,16 +22,15 @@ const init = async () => {
   browser = await puppeteer.launch(OPTIONS);
   page = (await browser.pages())[0];
   page.setUserAgent(USER_AGENT);
-  // await page.setViewport({ width: 800, height: 600 });
 };
 
 const isLogin = async () => {
   console.log("[v] Mengunjungi FB");
-  await page.goto("https://m.facebook.com/");
+  await page.goto("https://facebook.com/");
 
   const isLoggedIn = await page.evaluate(() => {
-    const facebookLogo = document.querySelector("div.m.displayed");
-    return facebookLogo !== null;
+    const profilePic = document.querySelector('[aria-label="Your profile"]');
+    return profilePic !== null;
   });
 
   if (!isLoggedIn) return false;
@@ -39,88 +38,41 @@ const isLogin = async () => {
 };
 
 const login = async () => {
-  await sleep();
   console.log("[v] Mengisi input login ...");
 
-  await page.type("#m_login_email", CREDS.EM, {
+  await page.type("[name='email']", CREDS.EM, {
     delay: random(200),
   });
-  await page.type("#m_login_password", CREDS.PW, {
+  await page.type("[name='pass']", CREDS.PW, {
     delay: random(250),
   });
 
   console.log("[v] Proses login ...");
   await page.click('[name="login"]');
+
   await page.waitForNavigation();
-
   console.log("[v] Berhasil login");
-  await sleep();
-
-  const isNotNow = await page.evaluate(() => {
-    const notNowBtn = document.querySelector(
-      'a[href^="/login/save-device/cancel/"]'
-    );
-    return notNowBtn !== null;
-  });
-
-  if (isNotNow) {
-    console.log("[v] Tombol Not Now terdeteksi, mengalihkan ...");
-    await page.click('a[href^="/login/save-device/cancel/"]');
-  }
 };
 
 // Visit the facebook user page
 const visit = async () => {
   console.log("[v] Mengunjungi FB STMIK Komputama");
-  const titlePageSelector =
-    "#screen-root > div > div.m.fixed-container.top > div:nth-child(2) > div.m.bg-s3 > div:nth-child(2) > h2 > span";
+  await sleep();
 
   await page.goto(URL_PAGE);
-  // await page.waitForSelector(titlePageSelector);
-  await sleep();
-
-  const title = await page.$eval(
-    titlePageSelector,
-    (el: any) => el.textContent
-  );
-
-  if (title !== "Stmik Komputama") throw "Bukan akun FB STMIK Komputama";
-  return true;
-};
-
-// Check last post (number 2 after pinned post)
-const checkLastPost = async () => {
-  await sleep();
-
-  const post2Selector =
-    "#screen-root > div > div:nth-child(2) > div:nth-child(21) > div:nth-child(2)";
-  const titlePostSelector =
-    "#screen-root > div > div.m.fixed-container.top > div:nth-child(2) > div > div > div:nth-child(2) > h1 > span";
-
-  await page.waitForSelector(post2Selector);
-  console.log("[v] Mengecek post terbaru");
-
-  await page.click(post2Selector);
-  await page.waitForSelector(titlePostSelector);
-
-  const titlePost = await page.$eval(
-    titlePostSelector,
-    (el: any) => el.textContent
-  );
-
-  if (titlePost !== "Stmik's post") throw "Bukan postingan STMIK Komputama";
+  await page.waitForSelector('[aria-label="Stmik Komputama"]');
 };
 
 // Check whether last post is liked
-const isLiked = async () => {
-  const like = await page.evaluate(() => {
-    const likeClean = document.querySelector(
-      "#screen-root > div > div:nth-child(2) > div:nth-child(7) > div:nth-child(1) > div > button > span:nth-child(1)[style='color:#ffffff;']"
+const checkLike = async () => {
+  const isLiked = await page.evaluate(() => {
+    const unlikeExist = document.querySelector(
+      'div[role="feed"]:nth-child(2) > div [aria-posinset="1"] > div :not([class]) > div :not([class]) > div:nth-child(4) > div > div > div:nth-child(1) > div [aria-label="Remove Like"]'
     );
-    return likeClean == null;
+    return unlikeExist !== null;
   });
 
-  if (!like) return false;
+  if (!isLiked) return false;
 
   console.log("[v] Postingan terbaru sudah di like & share");
   return true;
@@ -128,33 +80,26 @@ const isLiked = async () => {
 
 // Do like and share action
 const doLike = async () => {
-  await sleep();
-  console.log("[v] Like post terbaru");
-
   const likeSelector =
-    "#screen-root > div > div:nth-child(2) > div:nth-child(7) > div:nth-child(1) > div > button > span:nth-child(1)[style='color:#ffffff;']";
+    'div[role="feed"]:nth-child(2) > div [aria-posinset="1"] > div :not([class]) > div :not([class]) > div:nth-child(4) > div > div > div:nth-child(1) > div [aria-label="Like"]';
   const shareSelector =
-    "#screen-root > div > div:nth-child(2) > div:nth-child(7) > div:nth-child(3) > div > button";
-  const sharePublicSelector =
-    "#screen-root > div.m.bg-s1.dark-mode.dialog-screen > div.m.fixed-container.bottom > div > div > div > div > div.m.bg-s3 > div:nth-child(1) > div";
-  const postBtnSelector =
-    "#screen-root > div > div:nth-child(2) > div:nth-child(11) > div";
+    'div[role="feed"]:nth-child(2) > div [aria-posinset="1"] > div :not([class]) > div :not([class]) > div:nth-child(4) > div > div > div:nth-child(1) > div [aria-label="Send this to friends or post it on your Timeline."]';
+  const shareNowSelector =
+    'div [aria-label="Share options"] > div [role="button"]';
 
+  await sleep(3000, 5000);
+  console.log("[v] Like post terbaru");
   await page.click(likeSelector);
 
   console.log("[v] Share post terbaru");
   await sleep(5000, 10000);
-
   await page.click(shareSelector);
-  await page.waitForSelector(sharePublicSelector);
 
-  await sleep(5000, 10000);
-  await page.click(sharePublicSelector);
+  await page.waitForSelector(shareNowSelector);
+  await sleep(1000, 5000);
+  await page.click(shareNowSelector);
 
   await sleep(3000, 5000);
-  await page.waitForSelector(postBtnSelector);
-  await page.click(postBtnSelector);
-
   console.log("[v] Aksi selesai");
 };
 
@@ -163,7 +108,7 @@ const closingBrowser = async () => {
   await browser.close();
 };
 
-const sleep = (ms = 10000, rd = 30000) => {
+const sleep = (ms = 10000, rd = 20000) => {
   const randomTime = Math.floor(Math.random() * rd);
   return new Promise((resolve) => {
     setTimeout(resolve, ms + randomTime);
@@ -178,27 +123,25 @@ const runCron = async () => {
     if (!isLoggedIn) await login();
 
     await visit();
-    await checkLastPost();
 
-    const isLastPostLiked = await isLiked();
+    const isLastPostLiked = await checkLike();
     if (isLastPostLiked) return closingBrowser();
 
     await doLike();
     closingBrowser();
   } catch (error: any) {
     console.log("[x] Kesalahan: ", error.message);
+    console.log(error);
   }
 };
+
+console.log("[] Buzztama berjalan []");
 
 if (!CREDS.EM || !CREDS.PW || !USER_AGENT) {
   console.log("[x] Akun atau user agent masih kosong");
 } else {
-  init().then(runCron).catch(console.error);
-
   cron.schedule("*/30 * * * *", () => {
     console.log("[] Cron dieksekusi []");
     init().then(runCron).catch(console.error);
   });
-
-  console.log("[] Buzztama berjalan []");
 }

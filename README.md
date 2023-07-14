@@ -8,7 +8,7 @@ Automasi like dan share postingan FB STMIK Komputama.
 
 Masukkan email dan password ke `src/index.ts` di baris `14` dan `15`.
 
-PASTIKAN FB KALIAN DALAM MODE GELAP.
+PASTIKAN FB KALIAN DALAM MODE GELAP DAN BAHASA INGGRIS.
 
 ```js
 const CREDS = {
@@ -24,8 +24,7 @@ Kamu dapat mencobanya dengan akun dummy.
 Kunjungi (Dapatkan User Agent)[https://whatmyuseragent.com/] lalu copy dan ubah user agent pada baris ke `5`.
 
 ```js
-const USER_AGENT =
-  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36";
+const USER_AGENT = "Mozilla/5.0 .... ";
 ```
 
 ## Interval
