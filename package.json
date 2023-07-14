@@ -1,7 +1,7 @@
 {
   "name": "buzztama",
   "version": "1.0.0",
-  "description": "Automate tp snipe STMIK Komputama FB account to auto like and share",
+  "description": "Automate to snipe STMIK Komputama FB account to auto like and share",
   "main": "index.ts",
   "scripts": {
     "start": "node ./dist/index.js",

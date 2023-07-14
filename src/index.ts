@@ -4,11 +4,11 @@ const cron = require("node-cron");
 // Constant
 const USER_AGENT = "";
 const OPTIONS: PuppeteerLaunchOptions = {
-  headless: true,
+  headless: "new", // false untuk melihat browser
   userDataDir: "./user_data",
   args: ["--no-sandbox", "--disable-setuid-sandbox"],
 };
-const URL_PAGE = "https://facebook.com/stmik.komputamamajenang.9";
+const URL_PAGE = "https://web.facebook.com/stmik.komputamamajenang.9";
 const CREDS = {
   EM: "",
   PW: "",
@@ -17,24 +17,28 @@ const CREDS = {
 // Placeholder
 let page: any, browser: any;
 
-// Initialiaze puppeteer
-const init = async () => {
+// Initialiaze
+const initBrowser = async () => {
   browser = await puppeteer.launch(OPTIONS);
-  page = (await browser.pages())[0];
+};
+
+const initPage = async () => {
+  console.log("[v] Membuka laman");
+  page = await browser.newPage();
   page.setUserAgent(USER_AGENT);
+
+  console.log("[v] Mengunjungi FB");
+  await page.goto("https://web.facebook.com/");
 };
 
 const isLogin = async () => {
-  console.log("[v] Mengunjungi FB");
-  await page.goto("https://facebook.com/");
-
   const isLoggedIn = await page.evaluate(() => {
-    const profilePic = document.querySelector('[aria-label="Your profile"]');
-    return profilePic !== null;
+    const postBtn = document.querySelector('[aria-label="Create a post"]');
+    if (postBtn != null) return true;
+    return false;
   });
 
-  if (!isLoggedIn) return false;
-  return true;
+  return isLoggedIn;
 };
 
 const login = async () => {
@@ -57,25 +61,22 @@ const login = async () => {
 // Visit the facebook user page
 const visit = async () => {
   console.log("[v] Mengunjungi FB STMIK Komputama");
-  await sleep();
 
   await page.goto(URL_PAGE);
-  await page.waitForSelector('[aria-label="Stmik Komputama"]');
+  await page.waitForSelector('div[role="feed"]:nth-child(2)');
 };
 
 // Check whether last post is liked
 const checkLike = async () => {
   const isLiked = await page.evaluate(() => {
-    const unlikeExist = document.querySelector(
-      'div[role="feed"]:nth-child(2) > div [aria-posinset="1"] > div :not([class]) > div :not([class]) > div:nth-child(4) > div > div > div:nth-child(1) > div [aria-label="Remove Like"]'
+    const LikeBtn = document.querySelector(
+      'div[role="feed"]:nth-child(2) > div [aria-posinset="1"] > div :not([class]) > div :not([class]) > div:nth-child(4) > div > div > div:nth-child(1) > div [aria-label="Like"]'
     );
-    return unlikeExist !== null;
+    return LikeBtn == null;
   });
 
-  if (!isLiked) return false;
-
-  console.log("[v] Postingan terbaru sudah di like & share");
-  return true;
+  if (isLiked) console.log("[v] Postingan terbaru sudah di like & share");
+  return isLiked;
 };
 
 // Do like and share action
@@ -103,12 +104,12 @@ const doLike = async () => {
   console.log("[v] Aksi selesai");
 };
 
-const closingBrowser = async () => {
-  console.log("[v] Menutup browser");
-  await browser.close();
+const closingPage = async () => {
+  console.log("[v] Menutup laman");
+  return page.close();
 };
 
-const sleep = (ms = 10000, rd = 20000) => {
+const sleep = (ms = 10000, rd = 15000) => {
   const randomTime = Math.floor(Math.random() * rd);
   return new Promise((resolve) => {
     setTimeout(resolve, ms + randomTime);
@@ -122,16 +123,26 @@ const runCron = async () => {
     const isLoggedIn = await isLogin();
     if (!isLoggedIn) await login();
 
+    const page_url = page.url();
+    const page_title = await page.title();
+    if (page_url.includes("checkpoint")) {
+      console.log("[x] Silakan konfirmasi perangkat!");
+      await sleep();
+      await closingPage();
+      return;
+    }
+    console.log(page_url, page_title);
     await visit();
 
     const isLastPostLiked = await checkLike();
-    if (isLastPostLiked) return closingBrowser();
+    if (isLastPostLiked) return closingPage();
 
     await doLike();
-    closingBrowser();
+    closingPage();
   } catch (error: any) {
     console.log("[x] Kesalahan: ", error.message);
     console.log(error);
+    closingPage();
   }
 };
 
@@ -140,8 +151,15 @@ console.log("[] Buzztama berjalan []");
 if (!CREDS.EM || !CREDS.PW || !USER_AGENT) {
   console.log("[x] Akun atau user agent masih kosong");
 } else {
-  cron.schedule("*/30 * * * *", () => {
-    console.log("[] Cron dieksekusi []");
-    init().then(runCron).catch(console.error);
+  initBrowser().then(async () => {
+    try {
+      initPage().then(login).catch(console.error);
+      cron.schedule("*/30 * * * *", () => {
+        console.log("[] Cron dieksekusi []");
+        initPage().then(runCron).catch(console.error);
+      });
+    } catch (error) {
+      console.log(error);
+    }
   });
 }

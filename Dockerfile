@@ -49,7 +49,7 @@ COPY . .
 
 RUN pnpm install
 
-RUN pnpm run build
+RUN pnpm build
 
 EXPOSE 3000
 
