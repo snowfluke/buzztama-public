@@ -2,8 +2,7 @@ import puppeteer, { PuppeteerLaunchOptions } from "puppeteer";
 const cron = require("node-cron");
 
 // Constant
-const SUPER_AGENT =
-  "Mozilla/5.0 (Linux; Android 10; SM-A107F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Mobile Safari/537.36";
+const USER_AGENT = "";
 const OPTIONS: PuppeteerLaunchOptions = {
   headless: true,
   userDataDir: "./user_data",
@@ -22,7 +21,7 @@ let page: any, browser: any;
 const init = async () => {
   browser = await puppeteer.launch(OPTIONS);
   page = (await browser.pages())[0];
-  page.setUserAgent(SUPER_AGENT);
+  page.setUserAgent(USER_AGENT);
   // await page.setViewport({ width: 800, height: 600 });
 };
 
@@ -72,14 +71,13 @@ const login = async () => {
 
 // Visit the facebook user page
 const visit = async () => {
-  await sleep();
-
   console.log("[v] Mengunjungi FB STMIK Komputama");
   const titlePageSelector =
     "#screen-root > div > div.m.fixed-container.top > div:nth-child(2) > div.m.bg-s3 > div:nth-child(2) > h2 > span";
 
   await page.goto(URL_PAGE);
-  await page.waitForSelector(titlePageSelector);
+  // await page.waitForSelector(titlePageSelector);
+  await sleep();
 
   const title = await page.$eval(
     titlePageSelector,
@@ -192,13 +190,15 @@ const runCron = async () => {
   }
 };
 
-if (!CREDS.EM || !CREDS.PW) {
-  console.log("[x] Email dan password masih kosong");
+if (!CREDS.EM || !CREDS.PW || !USER_AGENT) {
+  console.log("[x] Akun atau user agent masih kosong");
 } else {
+  init().then(runCron).catch(console.error);
+
   cron.schedule("*/30 * * * *", () => {
     console.log("[] Cron dieksekusi []");
     init().then(runCron).catch(console.error);
   });
 
-  console.log("[] Buzztama berjalan setiap 30 menit []");
+  console.log("[] Buzztama berjalan []");
 }
