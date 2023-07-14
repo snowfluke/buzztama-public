@@ -4,7 +4,7 @@ const cron = require("node-cron");
 // Constant
 const USER_AGENT = "";
 const OPTIONS: PuppeteerLaunchOptions = {
-  headless: false,
+  headless: true,
   userDataDir: "./user_data",
   args: ["--no-sandbox", "--disable-setuid-sandbox"],
 };
