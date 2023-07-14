@@ -1,0 +1,31 @@
+{
+  "name": "buzztama",
+  "version": "1.0.0",
+  "description": "Automate tp snipe STMIK Komputama FB account to auto like and share",
+  "main": "index.ts",
+  "scripts": {
+    "start": "node ./dist/index.js",
+    "dev": "npx ts-node ./src/index.ts",
+    "build": "tsc"
+  },
+  "keywords": [
+    "bot",
+    "snipe",
+    "facebook"
+  ],
+  "author": "Awal Ariansyah",
+  "license": "ISC",
+  "dependencies": {
+    "node-cron": "^3.0.2",
+    "puppeteer": "^20.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.4.1",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.44.0",
+    "eslint-plugin-simple-import-sort": "^10.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6"
+  }
+}
